@@ -223,21 +223,22 @@ class DataProcess(object):
                     print(1)
                     for item_pre_process in item_case['pre_process']:
                         item_split_process = item_pre_process.split('=')
+                        content_process = item_split_process[0]
+                        wait_time = self.get_wait_time(content_process)
                         # 获取XCP信号
-                        if item_split_process[0].startswith("P_") or \
-                                item_split_process[0].startswith("Out_") or \
-                                item_split_process[0].startswith("env_"):
+                        if content_process.startswith("P_") or \
+                                content_process.startswith("Out_") or \
+                                content_process.startswith("env_"):
                             pre_process_list.append(item_split_process)
-                            print(str(item_split_process[0]), " is a calibration object!")
+                            print(str(content_process), " is a calibration object!")
                         #  获取等待时间
-                        elif item_split_process[0].startswith("wait"):
-                            pre_process_list.append(item_split_process)
-                            print(str(item_split_process[0]), " is waiting horizon!")
+                        elif wait_time:
+                            pre_process_list.append(wait_time)
                         #  获取CAN信号和完整message信息
                         else:
                             for item_dbc_name, item_dbc_info in parseDBC.items():
                                 for item_single_dbc_info in item_dbc_info:
-                                    if item_split_process[0] == item_single_dbc_info['signal_name']:
+                                    if content_process == item_single_dbc_info['signal_name']:
                                         item_split_process.insert(0, item_single_dbc_info['message_name'])
                                         item_split_process.append(item_dbc_name)
                                         item_split_process.append(item_single_dbc_info["cycle_time"])
@@ -255,9 +256,11 @@ class DataProcess(object):
                     print(2)
                     for item_steps in item_case['steps']:
                         item_split_steps = item_steps.split('=')
+                        content_step = item_steps[0]
+                        wait_time = self.get_wait_time(content_step)
                         for item_dbc_name, item_dbc_info in parseDBC.items():
                             for item_single_dbc_info in item_dbc_info:
-                                if item_split_steps[0] == item_single_dbc_info['signal_name']:
+                                if content_step == item_single_dbc_info['signal_name']:
                                     item_split_steps.insert(0, item_single_dbc_info['message_name'])
                                     item_split_steps.append(item_dbc_name)
                                     item_split_steps.append(item_single_dbc_info["cycle_time"])
@@ -267,12 +270,11 @@ class DataProcess(object):
                             if len(item_split_steps) == 5:
                                 steps_list.append(item_split_steps)
                                 break
+                        if wait_time:
+                            steps_list.append(wait_time)
                         if len(item_split_steps) == 2:
-                            if item_split_steps[0].startswith("P_") or \
-                                    item_split_process[0].startswith("Out_") or \
-                                    item_split_process[0].startswith("env_"):
+                            if self.is_calibration_variable(content_step):
                                 steps_list.append(item_split_steps)
-                                print(str(item_split_steps[0])+ " is a calibration object!")
                             else:
                                 raise RuntimeError(f"加载的dbc中无此信号: {item_split_steps[0]}")
                 # input_list  [[[case1.preprocess1], [case1.preprocess2], ... , [case1.steps1], ... ],
@@ -284,9 +286,10 @@ class DataProcess(object):
             for item_case in out_operation:
                 for item_pre_expect in item_case['expect']:
                     item_split_expect = item_pre_expect.split('=')
+                    content_expect = item_split_expect[0]
                     for item_dbc_name, item_dbc_info in parseDBC.items():
                         for item_single_dbc_info in item_dbc_info:
-                            if item_split_expect[0] == item_single_dbc_info['signal_name']:
+                            if content_expect == item_single_dbc_info['signal_name']:
                                 # item_split_process: [message_name, signal_name, exp_val, dbc_name]
                                 item_split_expect.insert(0, item_single_dbc_info['message_name'])
                                 item_split_expect.append(item_dbc_name)
@@ -295,14 +298,10 @@ class DataProcess(object):
                             expect_list.append(item_split_expect)
                             break
                     if len(item_split_expect) == 2:
-                        if item_split_expect[0].startswith("In_"):
-                            expect_list.append(item_split_expect)
-                        elif item_split_expect[0].startswith("P_"):
-                            expect_list.append(item_split_expect)
-                        elif item_split_expect[0].startswith("Out_"):
+                        if self.is_calibration_variable(content_expect):
                             expect_list.append(item_split_expect)
                         else:
-                            raise RuntimeError(f"加载的dbc中无此信号: {item_split_expect[0]}")
+                            raise RuntimeError(f"加载的dbc中无此信号: {content_expect}")
                 output_list.append(copy.deepcopy(expect_list))
                 expect_list.clear()
 
@@ -464,10 +463,10 @@ class DataProcess(object):
         # output_list: [msg_name, sig_name, dbc_name]
         return input_list, output_list
 
-    def get_wait_time(self, content)->int:
+    def get_wait_time(self, content)->list:
         if content.startswith("wait"):
             string_time = content.split(" ")[-1]
-            return string_time.split("s")[0] # 返回等待时长
+            return list(string_time.split("s")[0]) # 返回等待时长
 
     def is_calibration_variable(self, content)->bool:
         if content.startswith("P_") or \

@@ -82,13 +82,6 @@ class CaseTxRxSig():
                     if inport_op:
                         for n in range(len(inport_op)):
                             print(inport_op[n])
-
-                        #     # if time_delay:
-                        #     #     time.sleep(time_delay)  预留输入步骤之间的时间间隔
-                        #     # myThread = threading.Thread(target=send_signal, args=(oe, ape, item_input))
-                        #     # myThread.start()
-                        #         cycle_time = self.send_signal(oe, ape, item_input)
-                        #         oe.DoEvents(cycle_time)
                         # ----------------------BELOW AVAILABLE
                             count = 0
                             while count<100:
@@ -98,7 +91,6 @@ class CaseTxRxSig():
                                     count = 100
                                 send_signal(oe, ape, inport_op[n])
 
-                    # time.sleep(1)
                     actual_out_per_case = [] #  每个用例的测试结果
                     if_pass_flag = True
                     for item_output in output[i]:
@@ -356,8 +348,8 @@ def send_signal(oe, ape, case_input: list):
     :param case_input: case 输入序列
     :return:
     """
-    # 为标定量初始化线程间隔时间
-    cycle_time_thread = 100
+    # # 为标定量初始化线程间隔时间
+    # cycle_time_thread = 100
     if len(case_input)==5:
         msg_name_in = case_input[location_msg]
         sig_name_in = case_input[location_sig]
@@ -374,6 +366,8 @@ def send_signal(oe, ape, case_input: list):
     if len(case_input)==2 and case_input[0].startswith("P_"):
         ape.calibration_by_name(case_input[0], int(case_input[1]))
         # ape.calibration_by_name("P_VMMSG_ADSAELevel", 1)
+    if len(case_input)==1:
+        time.sleep(int(case_input[0]))
 
     # timer_0 = threading.Timer(interval=cycle_time_thread, function=send_signal,
     #                           args=(oe, ape, case_input))
