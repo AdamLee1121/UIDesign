@@ -223,11 +223,17 @@ class DataProcess(object):
                     print(1)
                     for item_pre_process in item_case['pre_process']:
                         item_split_process = item_pre_process.split('=')
+                        # 获取XCP信号
                         if item_split_process[0].startswith("P_") or \
                                 item_split_process[0].startswith("Out_") or \
                                 item_split_process[0].startswith("env_"):
                             pre_process_list.append(item_split_process)
                             print(str(item_split_process[0]), " is a calibration object!")
+                        #  获取等待时间
+                        elif item_split_process[0].startswith("wait"):
+                            pre_process_list.append(item_split_process)
+                            print(str(item_split_process[0]), " is waiting horizon!")
+                        #  获取CAN信号和完整message信息
                         else:
                             for item_dbc_name, item_dbc_info in parseDBC.items():
                                 for item_single_dbc_info in item_dbc_info:
@@ -458,6 +464,17 @@ class DataProcess(object):
         # output_list: [msg_name, sig_name, dbc_name]
         return input_list, output_list
 
+    def get_wait_time(self, content)->int:
+        if content.startswith("wait"):
+            string_time = content.split(" ")[-1]
+            return string_time.split("s")[0] # 返回等待时长
+
+    def is_calibration_variable(self, content)->bool:
+        if content.startswith("P_") or \
+            content.startswith("Out_") or \
+            content.startswith("env_"):
+            print(str(content), " is a calibration object!")
+            return True
 
 # DBC 文件格式相关的参数
 length_of_BO1 = 6  # BO_开头的行为message描述行，分割后可以形成长度为5的数组，BO_ 292 SP1_Info1_10ms: 32 FSD1
