@@ -71,7 +71,7 @@ class DataProcess(object):
         # print(sheet_data, case_num)
         # {'test1': <Worksheet "test1">, 'test2': <Worksheet "test1">}
         # {'test1': 2, 'test2': 2}
-        print(case_num)
+        # print(case_num)
         return sheet_data, case_num
 
     def _extractIn(self) -> deque:
@@ -117,9 +117,9 @@ class DataProcess(object):
                             dict["steps"].remove(item)
                 else:
                     dict["steps"] = []
-                    self.InMatrix.append(deepcopy(dict))
+                self.InMatrix.append(deepcopy(dict))
                 dict = {}
-        print(self.InMatrix)
+        # print(self.InMatrix)
         # 输出的结果格式如下：
         # deque([{'pre_process': ['MasterCylinderPressure=1', 'MasterCylinderQualifier=2'],
         #         'steps': ['SigGroup_27_ChkSm=3']},
@@ -175,7 +175,7 @@ class DataProcess(object):
                 dict["expect"] = cell_pre.split("\n")
                 self.ExpMatrix.append(deepcopy(dict))
                 dict = {}
-        print(self.ExpMatrix)
+        # print(self.ExpMatrix)
         # deque([{'expect': ['MasterCylinderPressure=1', 'MasterCylinderPressure=2', 'SigGroup_27_ChkSm=3']},
         #        {'expect': ['MasterCylinderPressure=1', 'MasterCylinderPressure=2', 'SigGroup_27_ChkSm=3']},
         #        {'expect': ['MasterCylinderPressure=1', 'MasterCylinderPressure=2', 'SigGroup_27_ChkSm=3']},
@@ -220,63 +220,44 @@ class DataProcess(object):
                 if not item_case['pre_process']:
                     pre_process_list = []
                 else:
-                    print(1)
                     for item_pre_process in item_case['pre_process']:
                         item_split_process = item_pre_process.split('=')
                         content_process = item_split_process[0]
                         wait_time = self.get_wait_time(content_process)
                         # 获取XCP信号
-                        if content_process.startswith("P_") or \
-                                content_process.startswith("Out_") or \
-                                content_process.startswith("env_"):
+                        if self.is_calibration_variable(content=content_process):
                             pre_process_list.append(item_split_process)
-                            print(str(content_process), " is a calibration object!")
+
                         #  获取等待时间
                         elif wait_time:
                             pre_process_list.append(wait_time)
                         #  获取CAN信号和完整message信息
                         else:
-                            for item_dbc_name, item_dbc_info in parseDBC.items():
-                                for item_single_dbc_info in item_dbc_info:
-                                    if content_process == item_single_dbc_info['signal_name']:
-                                        item_split_process.insert(0, item_single_dbc_info['message_name'])
-                                        item_split_process.append(item_dbc_name)
-                                        item_split_process.append(item_single_dbc_info["cycle_time"])
-                                        break
-                                if len(item_split_process) == 5:
-                                    pre_process_list.append(item_split_process)
-                                    break
-                                else:
-                                    raise RuntimeError(f"加载的dbc中无此信号：{item_split_process[0]}")
+                            item_split_process = self.get_can_signal(parsedbc=parseDBC, content=content_process, item_split_list=item_split_process)
+                            pre_process_list.append(item_split_process)
 
                 # 提取操作步骤的信号。若为空，则不做处理
                 if not item_case['steps']:
                     steps_list = []
                 else:
-                    print(2)
                     for item_steps in item_case['steps']:
                         item_split_steps = item_steps.split('=')
-                        content_step = item_steps[0]
+                        content_step = item_split_steps[0]
                         wait_time = self.get_wait_time(content_step)
-                        for item_dbc_name, item_dbc_info in parseDBC.items():
-                            for item_single_dbc_info in item_dbc_info:
-                                if content_step == item_single_dbc_info['signal_name']:
-                                    item_split_steps.insert(0, item_single_dbc_info['message_name'])
-                                    item_split_steps.append(item_dbc_name)
-                                    item_split_steps.append(item_single_dbc_info["cycle_time"])
-                                    break
-                                else:
-                                    pass
-                            if len(item_split_steps) == 5:
-                                steps_list.append(item_split_steps)
-                                break
-                        if wait_time:
+
+                        # 获取XCP信号
+                        if self.is_calibration_variable(content=content_step):
+                            steps_list.append(item_split_steps)
+
+                        #  获取等待时间
+                        elif wait_time:
                             steps_list.append(wait_time)
-                        if len(item_split_steps) == 2:
-                            if self.is_calibration_variable(content_step):
-                                steps_list.append(item_split_steps)
-                            else:
-                                raise RuntimeError(f"加载的dbc中无此信号: {item_split_steps[0]}")
+                        #  获取CAN信号和完整message信息
+                        else:
+                            item_split_steps = self.get_can_signal(parsedbc=parseDBC, content=content_step,
+                                                                     item_split_list=item_split_steps)
+                            steps_list.append(item_split_steps)
+
                 # input_list  [[[case1.preprocess1], [case1.preprocess2], ... , [case1.steps1], ... ],
                 # [[case2.proprecess],[case2.steps]],...]
                 input_list.append(pre_process_list + steps_list)
@@ -471,9 +452,26 @@ class DataProcess(object):
     def is_calibration_variable(self, content)->bool:
         if content.startswith("P_") or \
             content.startswith("Out_") or \
-            content.startswith("env_"):
-            print(str(content), " is a calibration object!")
+            content.startswith("env_") or content.startswith("In_"):
+            # print(str(content), " is a calibration\XCP object!")
             return True
+
+    def get_can_signal(self, parsedbc: dict, content, item_split_list)->list:
+        for item_dbc_name, item_dbc_info in parsedbc.items():
+            for item_single_dbc_info in item_dbc_info:
+                if content == item_single_dbc_info['signal_name']:
+                    item_split_list.insert(0, item_single_dbc_info['message_name'])
+                    item_split_list.append(item_dbc_name)
+                    item_split_list.append(item_single_dbc_info["cycle_time"])
+                    break
+                else:
+                    pass
+            if len(item_split_list) == 5:
+                break
+        if len(item_split_list) == 5:
+            return item_split_list
+        else:
+            raise RuntimeError(f"加载的dbc中无此信号: {content}")
 
 # DBC 文件格式相关的参数
 length_of_BO1 = 6  # BO_开头的行为message描述行，分割后可以形成长度为5的数组，BO_ 292 SP1_Info1_10ms: 32 FSD1

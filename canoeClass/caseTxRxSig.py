@@ -29,14 +29,15 @@ location_dbc_name = 3
 location_cycle_time = 4
 location_expect = 2
 
+
 # location_delay = 3 # 预留等待时间的位置
 # 从输入信号矩阵中提取出需要设置的Tx信号的，通道编号、消息名称、信号名称
 class CaseTxRxSig():
     def __init__(self):
         pass
 
-    def verify(self, oe: CANoe, ape:CANape,  casefilename: str,
-               dbcfilenames, csvfilename: str=None):
+    def verify(self, oe: CANoe, ape: CANape, casefilename: str,
+               dbcfilenames, csvfilename: str = None):
         """
         两种场景：
         1、只输入一个测试用例文档，提取出其中的输入和预期输出。执行前置条件和操作步骤，对比输出
@@ -70,7 +71,6 @@ class CaseTxRxSig():
 
                 print("dbcfiles has been loaded!")
 
-
                 input, output = case_data.extract_sig_val(parseDBC=parsedbc)
                 # print("output", output)
                 print("正在执行...")
@@ -82,16 +82,16 @@ class CaseTxRxSig():
                     if inport_op:
                         for n in range(len(inport_op)):
                             print(inport_op[n])
-                        # ----------------------BELOW AVAILABLE
+                            # ----------------------BELOW AVAILABLE
                             count = 0
-                            while count<100:
+                            while count < 100:
                                 if len(inport_op[n]) == 5:
-                                    count+=1
+                                    count += 1
                                 else:
                                     count = 100
                                 send_signal(oe, ape, inport_op[n])
 
-                    actual_out_per_case = [] #  每个用例的测试结果
+                    actual_out_per_case = []  # 每个用例的测试结果
                     if_pass_flag = True
                     for item_output in output[i]:
                         '''
@@ -106,16 +106,17 @@ class CaseTxRxSig():
                                                     f"-> 用例{i},信号{msg_name_out} {sig_name_out} 的预期输出："
                                                     f"{expect_out},实际输出：{actual_out}")
                         '''
-                        expect_out, actual_out = get_signal(oe, ape, item_output, i+1)
+                        expect_out, actual_out = get_signal(oe, ape, item_output, i + 1)
                         # 收集每个输出信号的实际结果
                         actual_out_per_case.append(actual_out)
                         try:
                             assert float(expect_out) == float(actual_out), "Actual output doesn't equal to expect!"
                         except AssertionError as e:
                             if_pass_flag = False
-                            ui_form.Ui_Form.log_display(self, "error", f"******{datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S')}"
-                                                                       f"-> 用例{i+1} "
-                                                                       f"Actual output doesn't equal to expect!")
+                            ui_form.Ui_Form.log_display(self, "error",
+                                                        f"******{datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S')}"
+                                                        f"-> 用例{i + 1} "
+                                                        f"Actual output doesn't equal to expect!")
                     actual_out_list.append(deepcopy(actual_out_per_case))
                     if if_pass_flag:
                         pass_fail_list.append("PASS")
@@ -125,10 +126,10 @@ class CaseTxRxSig():
                     time.sleep(5)
                     if inport_op:
                         for n in range(len(inport_op)):
-                            if len(inport_op[n])==5:
-                                inport_op[n][location_set_val]=0
+                            if len(inport_op[n]) == 5:
+                                inport_op[n][location_set_val] = 0
                             else:
-                                inport_op[n][1]=0
+                                inport_op[n][1] = 0
                             send_signal(oe, ape, inport_op[n])
                 print(case_num_list, actual_out_list, pass_fail_list)
 
@@ -187,8 +188,8 @@ class CaseTxRxSig():
         return case_num_list, actual_out_list, pass_fail_list
 
     def verify_single(self, oe: CANoe, ape: CANape, casefilename: str,
-                      dbcfilenames: list=None, csvfilename: str="",
-                      sheetname: str="Sheet2", caseorder: str="3",):
+                      dbcfilenames: list = None, csvfilename: str = "",
+                      sheetname: str = "Sheet2", caseorder: str = "3", ):
         """
         通过输入的”sheet名称, 用例序号“，查找用例内容，并执行测试步骤
         :param caseorder:
@@ -214,7 +215,8 @@ class CaseTxRxSig():
                     dbc = DBCload(dbcfilename)
                     parsedbc.update(dbc.parseDBC())
 
-                input, output = case_data.extract_sig_val_single(parseDBC=parsedbc, sheet_name=sheetname, case_order=case_order)
+                input, output = case_data.extract_sig_val_single(parseDBC=parsedbc, sheet_name=sheetname,
+                                                                 case_order=case_order)
                 print("正在执行...")
 
                 for item_input in input:
@@ -294,8 +296,8 @@ class CaseTxRxSig():
 
         return actual_out_list, pass_fail_list
 
-    def verify_range(self, oe:CANoe, ape: CANape, casefilename: str, dbcfilename: list=None,
-                     csvfilename: str="", case_location: str="Sheet2,[1:3]; Sheet3,[1:3]"):
+    def verify_range(self, oe: CANoe, ape: CANape, casefilename: str, dbcfilename: list = None,
+                     csvfilename: str = "", case_location: str = "Sheet2,[1:3]; Sheet3,[1:3]"):
         case_location_list = case_location.split(";")
         for item_case_location in case_location_list:
             case_sheet_name = item_case_location.split(",")[0]
@@ -313,11 +315,12 @@ class CaseTxRxSig():
                     self.verify_single(oe, ape, casefilename, dbcfilename, sheetname=case_sheet_name, caseorder=i)
                 actual_out_list.append(actual_out)
                 pass_fail_list.append(pass_fail)
-                i+=1
+                i += 1
 
             out_dict.update({case_sheet_name: [case_range_start, case_range_end, actual_out_list, pass_fail_list]})
 
         return out_dict
+
 
 def channel_choose(dbc_name) -> int:
     """
@@ -340,6 +343,7 @@ def channel_choose(dbc_name) -> int:
         channel_num = 4
     return channel_num
 
+
 def send_signal(oe, ape, case_input: list):
     """
     利用CANoe发送CAN信号，CANape标定变量
@@ -350,30 +354,31 @@ def send_signal(oe, ape, case_input: list):
     """
     # # 为标定量初始化线程间隔时间
     # cycle_time_thread = 100
-    if len(case_input)==5:
+    if len(case_input) == 5:
         msg_name_in = case_input[location_msg]
         sig_name_in = case_input[location_sig]
         set_val_in = case_input[location_set_val]
         dbc_name = case_input[location_dbc_name]
-        cycle_time_thread = float(case_input[location_cycle_time])/1000.0
+        cycle_time_thread = float(case_input[location_cycle_time]) / 1000.0
         channel_num = channel_choose(dbc_name)
         oe.set_sigVal(channel_num=channel_num, msg_name=msg_name_in, sig_name=sig_name_in, setVal=set_val_in)
         # oe.DoEvents(cycle_time_thread)
 
-    if len(case_input)==2 and case_input[0].startswith("env_"):
+    if len(case_input) == 2 and case_input[0].startswith("env_"):
         oe.set_Envar(case_input[0], float(case_input[1]))
 
-    if len(case_input)==2 and case_input[0].startswith("P_"):
+    if len(case_input) == 2 and case_input[0].startswith("P_"):
         ape.calibration_by_name(case_input[0], int(case_input[1]))
         # ape.calibration_by_name("P_VMMSG_ADSAELevel", 1)
-    if len(case_input)==1:
+    if len(case_input) == 1:
         time.sleep(int(case_input[0]))
 
     # timer_0 = threading.Timer(interval=cycle_time_thread, function=send_signal,
     #                           args=(oe, ape, case_input))
     # timer_0.start()
 
-def get_signal(oe, ape, case_expect: list, case_order:int):
+
+def get_signal(oe, ape, case_expect: list, case_order: int):
     if len(case_expect) == 4:
         msg_name_out = case_expect[location_msg]
         sig_name_out = case_expect[location_sig]
@@ -400,7 +405,6 @@ def get_signal(oe, ape, case_expect: list, case_order:int):
         print(
             f"{datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S')} "f"-> 用例{case_order},信号{obj_name} 的预期输出：",
             f"{expect_out},实际输出：{actual_out}")
-
 
     return expect_out, actual_out
 
