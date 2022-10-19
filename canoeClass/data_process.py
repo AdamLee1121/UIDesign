@@ -28,10 +28,10 @@ def is_contain_chinese(check_obj: str) -> bool:
             return True
     return False
 
-location_preprocess = 3
-location_steps = 4
-location_expect_result = 5
-location_actual_result = 6
+location_preprocess = 4
+location_steps = 5
+location_expect_result = 6
+location_actual_result = 7
 
 class DataProcess(object):
     def __init__(self, filepath):
