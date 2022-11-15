@@ -167,12 +167,17 @@ class DataProcess(object):
         keys = list(sheet_data.keys())
         # sheet个数
         len_ = len(keys)
-
+        # print(case_num)
         # 将预期结果中的内容，依据换行符分割出来
         for i in range(1, len_):
+            # print(keys[i])
             for j in range(3, case_num[keys[i]] + 3):
                 cell_pre = sheet_data[keys[i]].cell(j, location_expect_result).value
-                dict["expect"] = cell_pre.split("\n")
+                # print(cell_pre)
+                if len(cell_pre) == 1: # 单行
+                    dict["expect"] = list(cell_pre)
+                else:                  # 多行
+                    dict["expect"] = cell_pre.split("\n")
                 self.ExpMatrix.append(deepcopy(dict))
                 dict = {}
         # print(self.ExpMatrix)
@@ -597,10 +602,6 @@ class DBCload(object):
         return {dbc_text_name: bo_list}
 
 
-# debug
-# dbc = DBCload(r'D:\liyi10\project\VMM\X01-610VMM(1)\X01_CAN_Matrix_V6.0.0_20220510_FSD2_CHCAN2.dbc')
-# dbc.parseDBC()
-
 # csv每行中不同条目的位置信息
 location_sg = 0
 location_ms = 1
@@ -642,36 +643,3 @@ class csvload(object):
             self.table_sg_ms_msId_trans_sigCycTime_sigTimeOut.append(dict_new)
         # print(self.table_sg_ms_msId_trans_sigCycTime_sigTimeOut)
         return self.table_sg_ms_msId_trans_sigCycTime_sigTimeOut
-
-# if __name__ == "__main__":
-#     filepath = r"D:/liyi10/project/VMM/X01-610VMM(1)/X01_CAN_Matrix_V6.0.0_20220510_FSD1_CHCAN1.dbc"
-#     d = DBCload(filepath)
-#     print(d.parseDBC())
-# debug
-# if __name__ == "__main__":
-#     filepath = r"D:\liyi10\Desktop\testToolCase2.xlsx"
-#     data = DataProcess(filepath)
-#     in_operation = data.extractIn()
-#     out_operation = data.extractExp()
-# # # #     # data.loadExcel()
-#     csv_name = r'D:\liyi10\Desktop\ObjectList_show.csv'
-#     csv = csvload(csv_name)
-#     parseCSV = csv.parse_csv()
-#     print(data.extract_sig_val(parseCSV))
-#                      👇
-# ([[['ESP_Alarm_20ms_Rt_FD', 'ABSCtrlA', '1'], ['XCU_Info_10ms_FD', 'AccelPdlPos', '2'],
-#    ['IBooster_Info2_10ms_FD', 'ActOutputRod', '3']],
-#   [['XCU_HU_Cmd3_ETH1_100mixed', 'AirSusLoadMdSwReq', '1'], ['ASU_DTC', 'ASU_DTC1_Num', '2'],
-#    ['ASU_DTC', 'ASU_DTC4_State', '3']],
-#   [['ESP_Alarm_20ms_Rt_FD', 'ABSCtrlA', '1'], ['XCU_Info_10ms_FD', 'AccelPdlPos', '2'],
-#    {'IBooster_Info2_10ms_FD', 'ActOutputRod', '3'}],
-#   [['XCU_HU_Cmd3_ETH1_100mixed', 'AirSusLoadMdSwReq', '1'], ['ASU_DTC', 'ASU_DTC1_Num', '2'],
-#    ['ASU_DTC', 'ASU_DTC4_State', '3']]], [
-#      [['ESP_Alarm_20ms_Rt_FD', 'ABSCtrlA', '1'], ['XCU_Info_10ms_FD', 'AccelPdlPos', '2'],
-#       ['IBooster_Info2_10ms_FD', 'ActOutputRod', '3']],
-#      [['XCU_HU_Cmd3_ETH1_100mixed', 'AirSusLoadMdSwReq', '1'], ['ASU_DTC', 'ASU_DTC1_Num', '2'],
-#       ['ASU_DTC', 'ASU_DTC4_State', '3']],
-#      [['ESP_Alarm_20ms_Rt_FD', 'ABSCtrlA', '1'], ['XCU_Info_10ms_FD', 'AccelPdlPos', '2'],
-#       ['IBooster_Info2_10ms_FD', 'ActOutputRod', '3']],
-#      [['XCU_HU_Cmd3_ETH1_100mixed', 'AirSusLoadMdSwReq', '1'], ['ASU_DTC', 'ASU_DTC1_Num', '2'],
-#       ['ASU_DTC', 'ASU_DTC4_State', '3']]])

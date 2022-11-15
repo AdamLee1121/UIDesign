@@ -330,10 +330,10 @@ class Ui_Form(QtWidgets.QWidget):
             ape.initial(workingDir=workingDir, device_name=ape_device, db_name=ape_a2l)
             # 启动观测
             oe.start_Measurement()
-            mdfname = "Autotest" + time.strftime('%Y-%m-%d-%H-%M-%S')
-            ape.application.Measurement.MDFFilename = mdfname
-            ape.measurement_start() # 数据记录文件名
-            print("start measuring.", mdfname)
+            # mdfname = "Autotest" + time.strftime('%Y-%m-%d-%H-%M-%S')
+            # ape.application.Measurement.MDFFilename = mdfname
+            # ape.measurement_start() # 数据记录文件名
+            # print("start measuring.", mdfname)
 
             # caseTxRxSig.CaseTxRxSig.verify(self, oe=oe, ape= ape, casefilename=casefilename,dbcfilenames=dbcfilenames.split(";"))
 
@@ -342,7 +342,7 @@ class Ui_Form(QtWidgets.QWidget):
                                                dbcfilenames=self.lineEdit_oedbc.text().split(";"))
             # 结束观测
             oe.stop_Measurement()
-            ape.measurement_stop()
+            # ape.measurement_stop()
             # reporter(self.case_num_list, self.actual_out_list, self.pass_fail_list)
             print('allTest done!')
 

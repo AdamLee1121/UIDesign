@@ -18,7 +18,7 @@ print('\n')
 print('CANape dispatched.')
 
 #Init CANape
-canape.Open1(r"D:\liyi10\Downloads\X01_FSD_ACC_VMMSG_0627(1)\X01_FSD_ACC_VMMSG_0627",1,50000,True)
+canape.Open1(r"D:\liyi10\project\VMM\ape_project\X02_NOA_Parking_0719_ModelReference",1,50000,True)
 print('CANape initialized.')
 
 # cfg_path = r"D:\liyi10\Downloads\X01_FSD_ACC_VMMSG_0627(1)\X01_FSD_ACC_VMMSG_0627\X01_FSD.cna"
@@ -26,14 +26,16 @@ print('CANape initialized.')
 # print('CANape initialized.')
 # print("device number:", canape.Devices)
 
-dev = canape.Devices.Add("NOA_CAL", r"VMM_main_Updated.a2l","XCP", 1)
+dev = canape.Devices.Add("NOA_CAL", r"VMM_main_Parking_20220424.a2l","XCP", 1)
 print("device added")
 print(canape.Devices.Count)
-
+'''
 try:
     calob1 = dev.CalibrationObjects.Item("1")
 except:
     pass
+'''
+
 
 ca1 = "BSCL_PMS12State"
 ca2 = "VehicleCtrlStateAp"
@@ -41,8 +43,8 @@ ca3 = "Park_CSMCtrlReq"
 ca4 = "Park_AXCCtrlReq"
 ca5 = "Park_VHCState"
 
-dev.CalibrationObjects.Add("BSCL_PMS12State")
-calob = dev.CalibrationObjects.Item("BSCL_PMS12State")
+dev.CalibrationObjects.Add("Out_VMM_LongMainAvailabilty")
+calob = dev.CalibrationObjects.Item("Out_VMM_LongMainAvailabilty")
 
 calob.Read()
 Val = calob.Value

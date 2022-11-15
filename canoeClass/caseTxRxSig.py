@@ -76,8 +76,17 @@ class CaseTxRxSig():
                 print("正在执行...")
                 case_num = len(input)
 
-                i = 0
+                i = 0 # 定位开始用例位置
                 while i < case_num:
+
+                    mdfname = "Autotest" + time.strftime('%Y-%m-%d-%H-%M-%S')
+                    ape.application.Measurement.MDFFilename = mdfname
+                    ape.measurement_start()  # 数据记录文件名
+                    print("start measuring.", mdfname)
+
+                    # 存储变量的初始值
+                    initial_value = []
+
                     inport_op = input[i]
                     if inport_op:
                         for n in range(len(inport_op)):
@@ -87,13 +96,16 @@ class CaseTxRxSig():
                             while count < 100:
                                 if len(inport_op[n]) == 5:
                                     count += 1
+                                    initial_value.append(inport_op[location_set_val])
                                 else:
                                     count = 100
+                                    initial_value.append(inport_op[-1])
                                 send_signal(oe, ape, inport_op[n])
 
                     actual_out_per_case = []  # 每个用例的测试结果
                     if_pass_flag = True
                     for item_output in output[i]:
+                        print(item_output)
                         '''
                         msg_name_out = item_output[location_msg]
                         sig_name_out = item_output[location_sig]
@@ -123,14 +135,25 @@ class CaseTxRxSig():
                     else:
                         pass_fail_list.append("Fail")
                     i += 1
-                    time.sleep(5)
-                    if inport_op:
-                        for n in range(len(inport_op)):
+                    if inport_op:# 为用例中的信号设置有效初始值
+                        for n in range(1, len(inport_op)):
+                            """不能暴力设置成0，有些有效性信号 0代表 Invalid
                             if len(inport_op[n]) == 5:
                                 inport_op[n][location_set_val] = 0
-                            else:
+                            elif len(inport_op[n]) == 2:
                                 inport_op[n][1] = 0
+                            else:
+                                pass
                             send_signal(oe, ape, inport_op[n])
+                            """
+                            if len(inport_op[n]) == 5:
+                                inport_op[n][location_set_val] = initial_value[n]
+                            else:
+                                inport_op[n][-1]= initial_value[n]
+                            send_signal(oe, ape, inport_op[n])
+                    ape.measurement_stop()
+                    time.sleep(5)
+
                 print(case_num_list, actual_out_list, pass_fail_list)
 
             else:
